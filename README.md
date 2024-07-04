@@ -214,3 +214,40 @@ if __name__ == "__main__":
  print(f"Failed to send SMB2 Write Request: {e}")
  finally:
  sock.close()
+ from smb.SMBConnection import SMBConnection
+
+
+def smb_write_example(server_name, share_name, file_path, content, username, password, domain='', use_ip=False):
+    # Create an SMB connection
+    conn = SMBConnection(username, password, "client_machine_name", server_name, domain=domain, use_ntlm_v2=True)
+
+    if use_ip:
+        # If using IP, pass server_name as IP address
+        connected = conn.connect(server_name, 445)  # Port 445 is typical for SMB
+    else:
+        # If using hostname, perform DNS lookup
+        connected = conn.connect(server_name, 445)
+
+    if not connected:
+        print("Failed to connect to the server")
+        return
+
+    try:
+        # Open the file for writing (this will create the file if it doesn't exist)
+        with conn.openFile(share_name, file_path, 'wb') as file_obj:
+            file_obj.write(content.encode('utf-8'))
+    finally:
+        # Close the connection
+        conn.close()
+
+
+# Example usage
+server_name = ' 192.168.0.6'  # Replace with the hostname or IP address of your SMB server
+share_name = 'smp.pcap'  # Replace with the name of your shared folder
+file_path = r'C:\Users\admin\Downloads\smb.pcap'  # Replace with the path to the file you want to write to
+content = 'StructureSize (2 bytes),DataOffset (2 bytes),Length (4 bytes),Offset (8 bytes),FileId (16 bytes),Channel (4 bytes)'  # The content you want to write to the file
+username = 'admin'  # Replace with your SMB username
+password = 'Ib3xSupp0rt'  # Replace with your SMB password
+
+smb_write_example(server_name, share_name, file_path, content, username, password, use_ip=True)
+
